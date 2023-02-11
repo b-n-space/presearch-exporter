@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "presearch-exporter"
+version = "0.1.0"
+description = ""
+authors = ["N Space <1257310+nourspace@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.91.0"
+prometheus-client = "^0.16.0"
+uvicorn = {extras = ["standard"], version = "^0.20.0"}
+requests = "^2.28.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
