@@ -82,20 +82,20 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 2,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -128,7 +128,7 @@
         "x": 0,
         "y": 0
       },
-      "id": 4,
+      "id": 5,
       "options": {
         "legend": {
           "calcs": [],
@@ -148,7 +148,121 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum_over_time(pre_total_pre_earned[24h])\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "expr": "sum(sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[24h])/60) by (pre_client)\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\nsum(pre_node_info)",
+          "interval": "15m",
+          "legendFormat": "Daily ({{pre_client}})",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum(sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[7d])/60) by (pre_client) /7\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\nsum(pre_node_info)",
+          "hide": false,
+          "interval": "15m",
+          "legendFormat": "Weekly ({{pre_client}})",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Aggregate Rewards (Total)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[24h])\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "hide": false,
           "interval": "15m",
           "legendFormat": "{{node_description}}",
           "range": true,
@@ -182,13 +296,16 @@
               "tooltip": false,
               "viz": false
             },
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
             "lineWidth": 1,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -216,21 +333,120 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 10,
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum_over_time(pre_successful_requests{pre_client=~\"$pre_client\"}[24h])\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "hide": false,
+          "interval": "15m",
+          "legendFormat": "{{node_description}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Last 24 Success Requests (by node)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 5,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bool_on_off"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 10
       },
-      "id": 5,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -241,27 +457,15 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(sum_over_time(pre_total_pre_earned[24h])/60)\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\nsum(pre_node_info)",
-          "interval": "15m",
-          "legendFormat": "Daily",
+          "expr": "pre_connected{pre_client=~\"$pre_client\"}\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "hide": false,
+          "interval": "1m",
+          "legendFormat": "{{node_description}}",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(sum_over_time(pre_total_pre_earned[7d])/60)/7\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\nsum(pre_node_info)",
-          "hide": false,
-          "interval": "15m",
-          "legendFormat": "Weekly",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Aggregate Rewards (Total)",
+      "title": "Node Connectivity",
       "type": "timeseries"
     },
     {
@@ -405,7 +609,7 @@
         "h": 24,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 17
       },
       "id": 2,
       "options": {
@@ -430,7 +634,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "pre_connected\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "expr": "pre_connected{pre_client=~\"$pre_client\"}\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
           "format": "table",
           "instant": true,
           "legendFormat": "{{pre_client}} {{node_description}}",
@@ -515,6 +719,6 @@
   "timezone": "",
   "title": "Presearch Node",
   "uid": "R7xMbZ1Vz",
-  "version": 7,
+  "version": 11,
   "weekStart": ""
 }
