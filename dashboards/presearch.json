@@ -60,7 +60,7 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "liveNow": false,
@@ -129,6 +129,7 @@
         "y": 0
       },
       "id": 5,
+      "maxDataPoints": 90,
       "options": {
         "legend": {
           "calcs": [],
@@ -137,8 +138,8 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "targets": [
@@ -148,27 +149,14 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[24h])/60) by (pre_client)\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\nsum(pre_node_info)",
+          "expr": "sum(sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[$interval])) by (pre_client)",
           "interval": "15m",
-          "legendFormat": "Daily ({{pre_client}})",
+          "legendFormat": "{{pre_client}}",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[7d])/60) by (pre_client) /7\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\nsum(pre_node_info)",
-          "hide": false,
-          "interval": "15m",
-          "legendFormat": "Weekly ({{pre_client}})",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Aggregate Rewards (Total)",
+      "title": "Rewards ($interval by client)",
       "type": "timeseries"
     },
     {
@@ -247,7 +235,8 @@
           "placement": "right",
           "showLegend": true,
           "sortBy": "Last",
-          "sortDesc": true
+          "sortDesc": true,
+          "width": 200
         },
         "tooltip": {
           "mode": "multi",
@@ -261,15 +250,24 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[24h])\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "expr": "sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[$interval])\n* on(node_id) group_left(node_description)\npre_node_info{node_description=~\".*$search.*\"} > 0.1",
           "hide": false,
           "interval": "15m",
-          "legendFormat": "{{node_description}}",
+          "legendFormat": "{{pre_client}} >> {{node_description}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Last 24 Rewards (by node)",
+      "title": "Rewards ($interval by node)",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "/(.{2}).*>>/",
+            "renamePattern": "[$1]"
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -333,7 +331,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 10,
         "w": 12,
         "x": 0,
         "y": 10
@@ -348,7 +346,8 @@
           "placement": "right",
           "showLegend": true,
           "sortBy": "Last",
-          "sortDesc": true
+          "sortDesc": true,
+          "width": 200
         },
         "tooltip": {
           "mode": "multi",
@@ -362,15 +361,247 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum_over_time(pre_successful_requests{pre_client=~\"$pre_client\"}[24h])\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "expr": "sum_over_time(pre_successful_requests{pre_client=~\"$pre_client\"}[$interval])\n* on(node_id) group_left(node_description)\npre_node_info > 10",
           "hide": false,
           "interval": "15m",
-          "legendFormat": "{{node_description}}",
+          "legendFormat": "[{{pre_client}}]>> {{node_description}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Last 24 Success Requests (by node)",
+      "title": "Success Requests ($interval by node)",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "/\\[(.{2}).*\\]>>/",
+            "renamePattern": "[$1]"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true,
+          "width": 200
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum_over_time(pre_total_pre_earned{pre_client=~\"$pre_client\"}[$interval])\n* on(node_id) group_left(node_description)\npre_node_info{node_description=~\".*$search.*\"} > 0.1",
+          "hide": false,
+          "interval": "15m",
+          "legendFormat": "{{pre_client}} >> {{node_description}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Rewards ($interval stacked by node)",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "/(.{2}).*>>/",
+            "renamePattern": "[$1]"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true,
+          "width": 200
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "avg_over_time(pre_avg_reliability_score{pre_client=~\"$pre_client\"}[$interval])\n* on(node_id) group_left(node_description)\npre_node_info > 0",
+          "hide": false,
+          "interval": "15m",
+          "legendFormat": "{{pre_client}} >> {{node_description}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Reliability Score ($interval avg by node)",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "/(.{2}).*>>/",
+            "renamePattern": "[$1]"
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -435,19 +666,22 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 20
       },
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "lastNotNull"
+          ],
           "displayMode": "table",
           "placement": "right",
-          "showLegend": true
+          "showLegend": true,
+          "width": 200
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "asc"
         }
       },
       "targets": [
@@ -457,15 +691,24 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "pre_connected{pre_client=~\"$pre_client\"}\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "expr": "pre_connected{pre_client=~\"$pre_client\"}\n* on(node_id) group_left(node_description)\npre_node_info",
           "hide": false,
           "interval": "1m",
-          "legendFormat": "{{node_description}}",
+          "legendFormat": "{{pre_client}} >> {{node_description}}",
           "range": true,
           "refId": "A"
         }
       ],
       "title": "Node Connectivity",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "/(.{2}).*>>/",
+            "renamePattern": "[$1]"
+          }
+        }
+      ],
       "type": "timeseries"
     },
     {
@@ -521,14 +764,14 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 79
+                "value": 80
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "ID"
+              "options": "node_id"
             },
             "properties": [
               {
@@ -549,31 +792,31 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 217
+                "value": 300
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Connected"
+              "options": "Value"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 126
+                "value": 90
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "URL"
+              "options": "node_url"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 507
+                "value": 300
               },
               {
                 "id": "custom.align",
@@ -594,12 +837,60 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Client"
+              "options": "pre_client"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 128
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node_region"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 80
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node_stake"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "remote_addr"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
               }
             ]
           }
@@ -609,7 +900,7 @@
         "h": 24,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 27
       },
       "id": 2,
       "options": {
@@ -634,7 +925,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "pre_connected{pre_client=~\"$pre_client\"}\n* on(node_id) group_left(node_description, node_url, gateway_pool, remote_addr, version)\npre_node_info",
+          "expr": "pre_connected{pre_client=~\"$pre_client\"}\n* on(node_id) group_left(node_description, node_url, gateway_pool, node_region, node_stake, remote_addr, version)\npre_node_info",
           "format": "table",
           "instant": true,
           "legendFormat": "{{pre_client}} {{node_description}}",
@@ -652,23 +943,28 @@
               "job": true
             },
             "indexByName": {
-              "Time": 10,
-              "Value": 7,
+              "Time": 12,
+              "Value": 8,
               "gateway_pool": 2,
               "instance": 3,
               "job": 4,
               "node_description": 1,
               "node_id": 0,
-              "node_url": 8,
-              "pre_client": 9,
-              "remote_addr": 5,
-              "version": 6
+              "node_region": 5,
+              "node_stake": 9,
+              "node_url": 10,
+              "pre_client": 11,
+              "remote_addr": 6,
+              "version": 7
             },
             "renameByName": {
               "Value": "Connected",
               "gateway_pool": "Gateway",
               "job": "",
+              "node_description": "Description",
               "node_id": "ID",
+              "node_region": "Server Region",
+              "node_stake": "Staked PRE",
               "node_url": "URL",
               "pre_client": "Client",
               "remote_addr": "IP",
@@ -680,11 +976,53 @@
       "type": "table"
     }
   ],
+  "refresh": false,
   "schemaVersion": 37,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": [
+      {
+        "auto": false,
+        "auto_count": 30,
+        "auto_min": "10s",
+        "current": {
+          "selected": false,
+          "text": "7d",
+          "value": "7d"
+        },
+        "description": "Interval to aggregate readings on",
+        "hide": 0,
+        "label": "Interval",
+        "name": "interval",
+        "options": [
+          {
+            "selected": false,
+            "text": "1h",
+            "value": "1h"
+          },
+          {
+            "selected": false,
+            "text": "1d",
+            "value": "1d"
+          },
+          {
+            "selected": true,
+            "text": "7d",
+            "value": "7d"
+          },
+          {
+            "selected": false,
+            "text": "30d",
+            "value": "30d"
+          }
+        ],
+        "query": "1h,1d,7d,30d",
+        "queryValue": "",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "type": "interval"
+      },
       {
         "allValue": ".*",
         "current": {},
@@ -708,17 +1046,38 @@
         "skipUrlSync": false,
         "sort": 5,
         "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Search in node description ",
+        "hide": 0,
+        "label": "Node",
+        "name": "search",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
       }
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Presearch Node",
-  "uid": "R7xMbZ1Vz",
-  "version": 11,
+  "uid": "presearch-node",
+  "version": 28,
   "weekStart": ""
 }
